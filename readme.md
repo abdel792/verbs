@@ -78,6 +78,6 @@ In the add-on's settings panel, you should find the following:
   
   [[!tag dev stable]]
 
-[1]: https://github.com/abdel792/verbs/releases/download/v23.10.24/verbs-23.10.24.nvda-addon
+[1]: https://github.com/abdel792/verbs/releases/download/v12.11.26/verbs-12.11.26.nvda-addon
 
-[2]: http://cyber25.free.fr/nvda-addons/verbs-23.10.24-dev.nvda-addon
+[2]: http://cyber25.free.fr/nvda-addons/verbs-12.11.26-dev.nvda-addon

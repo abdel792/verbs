@@ -144,7 +144,11 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 	def onIrregularVerbsDialog(self, evt=None):
 		title = _("English irregular verbs")
 		url = "https://www.capeutservir.com/verbes/uk_verbes_irreguliers.php"
-		page = urllib.request.urlopen(url).read().decode("utf-8")
+		req = urllib.request.Request(
+			url,
+			headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+		)
+		page = urllib.request.urlopen(req).read().decode("utf-8")
 		pattern = r"<td>(?:<b>|<i>)?(.*?)(?:</b>|</i>)?</td>"
 		verbs = [x.group(1) for x in re.finditer(pattern, page, re.S)]
 		addition = (
@@ -204,17 +208,23 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 	def conjugate(self):  # noqa: C901
 		if re.match(r"^[^\W\d_]+$", self.verb):
 			verb = unicodedata.normalize('NFD', self.verb).encode('ascii', 'ignore').decode("utf-8")
-			req = urllib.request.urlopen(f"https://www.capeutservir.com/verbes/{verb}.html").read().decode("utf-8")
+
+			url = f"https://www.capeutservir.com/verbes/{verb}.html"
+			req = urllib.request.Request(
+				url,
+				headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+			)
+			page = urllib.request.urlopen(req).read().decode("utf-8")
 			pattern1 = r"<(?:th|td)[^>]*?>(.*?)<(?:/th|/td)>"
 			rfinditer = re.compile(pattern1, re.M)
 			pattern2 = r"</?span[^>]*>"
 			rsub = re.compile(pattern2, re.M)
-			lst = [rsub.sub("", x.group(1)) for x in rfinditer.finditer(req)]
+			lst = [rsub.sub("", x.group(1)) for x in rfinditer.finditer(page)]
 			lst = [x for x in lst if x not in ('', '&nbsp;')]
 			pattern3 = r"<th class[^=]*=[^\"]*\"mode\"[^>]*>(.*?)</th>"
 			rfinditer = re.compile(pattern3, re.S)
-			modes = [x.group(1) for x in rfinditer.finditer(req)]
-			pattern4 = r"<div class[^=]*=[^\"]*\"fleft verb-meta-info\"[^>]*>(.*?)</div>"
+			modes = [x.group(1) for x in rfinditer.finditer(page)]
+			pattern4 = r"Groupe\s*:\s*<b>(.*?)</b>"
 			rsearch = re.compile(pattern4, re.S)
 			pattern5 = r"</?(?:span|sup|b)[^>]*>"
 			rsub = re.compile(pattern5, re.M)
@@ -232,7 +242,7 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			self.onConjugationDialog()
 			return
 		lst = [lst[x] for x in order]
-		group = rsub.sub("", rsearch.search(req).group(1)).strip()
+		group = rsub.sub("", rsearch.search(page).group(1)).strip()
 		cleanLst = []
 		pattern7 = r"(?:<li>)([^<]*?)(?:</li>)"
 		for item in lst:
@@ -242,7 +252,7 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 				cleanLst.extend([x.group(1) for x in re.finditer(pattern7, item)])
 		title = f"Conjuguer le verbe {self.verb}"
 		infinitif = f"<h1>{group.replace(' Groupe: ---', '')} Le verbe {self.verb} est un auxiliaire.</h1>"\
-			if "---" in group else f"<h1>{group}.</h1>"
+			if "---" in group else f"<h1>Groupe : {group} groupe.</h1>"
 		frm = []
 		frm.append(infinitif)
 		for item in lst:
